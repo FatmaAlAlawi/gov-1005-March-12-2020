@@ -44,10 +44,15 @@ train %>%
 # same row. That subtraction is easier.
 
 train %>% 
-  group_by(treatment) %>% 
+  rep_sample_n(size=115, replace=TRUE, reps=1000) %>%
+  group_by(replicate, treatment) %>%
   summarise(avg_inc = mean(income)) %>% 
   pivot_wider(names_from = treatment, values_from = avg_inc) %>% 
-  mutate(Difference = Treated - Control) %>% 
+  mutate(Difference = Treated - Control) %>%
+  select(replicate, Difference, everything()) %>%
+  pull(Difference) %>%
+  quantile(c(0.025, 0.975))
+
   
   # R has many tricks and, as we go forward, we will show some of them to you.
   # We may not get around to explaining them all in class, but you should feel
@@ -65,11 +70,30 @@ train %>%
 
 1) Now that we know the difference in mean income between treated and control in this sample, we want to get a confidence interval for that difference. If we had sampled commuters other than the ones that we did sample, the difference would be different. How different might it be? Are these results consistent with the claim, made in the article, that treatment was randomly assigned?
 
+```{r}
+train %>% 
+  filter(treatment == "Treated") %>% 
+  rep_sample_n(size = 51, replace = TRUE, reps = 1000) %>% 
+  group_by(replicate) %>% 
+  summarise(avg_inc = mean(income)) %>% 
+  pull(avg_inc) %>%
+  quantile(c(0.01, 0.99))
+```
 
 
 
 2) The focus of the article is on the change in attitude. In our data, this is the variable att_chg. (Note that we have scaled this somewhat differently than the article did.) Recall that a positive attitude change means that a person has become more conservative in their opinions about immigration.
-
+```{r}
+train %>% 
+  rep_sample_n(size=115, replace=TRUE, reps=3) %>%
+  group_by(replicate, treatment) %>%
+  summarise(avg_inc = mean(att_chg)) %>% 
+  pivot_wider(names_from = treatment, values_from = avg_inc) %>% 
+  mutate(Difference = Treated - Control) %>%
+  select(replicate, Difference, everything()) %>%
+  pull(Difference) %>%
+  quantile(c(0.025, 0.975))
+```
 
 
 3) What is the difference in att_chg between the Treated and Control?
